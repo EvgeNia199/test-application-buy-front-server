@@ -20,8 +20,8 @@ instance.interceptors.response.use((response) => {
   }
   return response;
 }, (err) => {
-  if (err.response.status === 408 && history.location.pathname !== '/login' && history.location.pathname !== '/registration' && history.location.pathname !== '/') {
-    history.replace('/login');
+  if (err.response.status === 408 && history.location.pathname !== '/auth/login' && history.location.pathname !== '/auth/registration' && history.location.pathname !== '/') {
+    history.replace('/auth/login');
   }
   return Promise.reject(err);
 });

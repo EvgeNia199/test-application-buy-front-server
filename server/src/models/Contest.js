@@ -1,7 +1,13 @@
-
+const {Model} = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-  const Contest = sequelize.define('Contests', {
+  class Contest extends Model{
+    static associate({User, Offer}) {
+      Contest.belongsTo(User,{ foreignKey:'userId', sourceKey:'id'});
+      Contest.hasMany(Offer, {foreignKey:'contestId', targetKey:'id'});
+    }
+  }
+  Contest.init({
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -86,8 +92,9 @@ module.exports = (sequelize, DataTypes) => {
     },
   },
   {
-    timestamps: false,
-  });
-
+    sequelize,
+    modelName: "Contest",
+  }
+  );
   return Contest;
 };
