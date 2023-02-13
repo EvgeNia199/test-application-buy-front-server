@@ -1,8 +1,9 @@
-const db = require("../models");
-const ServerError = require("../errors/ServerError");
-const contestQueries = require("./queries/contestQueries");
-const UtilFunctions = require("../utils/functions");
-const CONSTANTS = require("../constants");
+const { Contest, Offer, User, Rating, Selects } = require('../models');
+const Sequelize = require('sequelize');
+const ServerError = require('../errors/ServerError');
+const contestQueries = require('./queries/contestQueries');
+const UtilFunctions = require('../utils/functions');
+const CONSTANTS = require('../constants');
 
 module.exports.dataForContest = async (req, res, next) => {
   const response = {};
@@ -11,14 +12,14 @@ module.exports.dataForContest = async (req, res, next) => {
       body: { characteristic1, characteristic2 },
     } = req;
     console.log(req.body, characteristic1, characteristic2);
-    const types = [characteristic1, characteristic2, "industry"].filter(
+    const types = [characteristic1, characteristic2, 'industry'].filter(
       Boolean
     );
 
-    const characteristics = await db.Selects.findAll({
+    const characteristics = await Selects.findAll({
       where: {
         type: {
-          [db.Sequelize.Op.or]: types,
+          [Sequelize.Op.or]: types,
         },
       },
     });
@@ -34,44 +35,44 @@ module.exports.dataForContest = async (req, res, next) => {
     res.send(response);
   } catch (err) {
     console.log(err);
-    next(new ServerError("cannot get contest preferences"));
+    next(new ServerError('cannot get contest preferences'));
   }
 };
 
 module.exports.getContestById = async (req, res, next) => {
   try {
-    let contestInfo = await db.Contests.findOne({
+    let contestInfo = await Contest.findOne({
       where: { id: req.headers.contestid },
-      order: [[db.Offers, "id", "asc"]],
+      order: [[Offer, 'id', 'asc']],
       include: [
         {
-          model: db.Users,
+          model: User,
           required: true,
           attributes: {
-            exclude: ["password", "role", "balance", "accessToken"],
+            exclude: ['password', 'role', 'balance', 'accessToken'],
           },
         },
         {
-          model: db.Offers,
+          model: Offer,
           required: false,
           where:
             req.tokenData.role === CONSTANTS.CREATOR
               ? { userId: req.tokenData.userId }
               : {},
-          attributes: { exclude: ["userId", "contestId"] },
+          attributes: { exclude: ['userId', 'contestId'] },
           include: [
             {
-              model: db.Users,
+              model: User,
               required: true,
               attributes: {
-                exclude: ["password", "role", "balance", "accessToken"],
+                exclude: ['password', 'role', 'balance', 'accessToken'],
               },
             },
             {
-              model: db.Ratings,
+              model: Rating,
               required: false,
               where: { userId: req.tokenData.userId },
-              attributes: { exclude: ["userId", "offerId"] },
+              attributes: { exclude: ['userId', 'offerId'] },
             },
           ],
         },
@@ -109,16 +110,16 @@ module.exports.updateContest = async (req, res, next) => {
 };
 
 module.exports.getCustomersContests = (req, res, next) => {
-  db.Contests.findAll({
+  Contest.findAll({
     where: { status: req.headers.status, userId: req.tokenData.userId },
     limit: req.body.limit,
     offset: req.body.offset ? req.body.offset : 0,
-    order: [["id", "DESC"]],
+    order: [['id', 'DESC']],
     include: [
       {
-        model: db.Offers,
+        model: Offer,
         required: false,
-        attributes: ["id"],
+        attributes: ['id'],
       },
     ],
   })
@@ -143,17 +144,17 @@ module.exports.getContests = (req, res, next) => {
     req.body.industry,
     req.body.awardSort
   );
-  db.Contests.findAll({
+  Contest.findAll({
     where: predicates.where,
     order: predicates.order,
     limit: req.body.limit,
     offset: req.body.offset ? req.body.offset : 0,
     include: [
       {
-        model: db.Offers,
+        model: Offer,
         required: req.body.ownEntries,
         where: req.body.ownEntries ? { userId: req.tokenData.userId } : {},
-        attributes: ["id"],
+        attributes: ['id'],
       },
     ],
   })
